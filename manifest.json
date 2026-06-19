@@ -1,0 +1,17 @@
+{
+  "name": "הביתה! משחק הסדר המשפחתי",
+  "short_name": "הביתה!",
+  "description": "משחק משפחתי: מחזירים פריטים למקום, צוברים כוכבים ועולים רמות",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3F0FF",
+  "theme_color": "#6C4DF6",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
