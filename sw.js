@@ -1,4 +1,4 @@
-const CACHE = 'beit-naki-v115';
+const CACHE = 'beit-naki-v117';
 const CORE = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {

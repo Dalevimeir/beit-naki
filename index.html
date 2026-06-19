@@ -1022,7 +1022,7 @@ const setMeta=(k,v)=>put('meta',{k,v});
 
 /* ================= Cloud sync (Supabase) ================= */
 const SB_URL='https://owowbxvotueqgkbfjwqg.supabase.co';
-const APP_VERSION='v115';
+const APP_VERSION='v117';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93b3dieHZvdHVlcWdrYmZqd3FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjc4MzYsImV4cCI6MjA5Njg0MzgzNn0.Mb7hJ7xhGIUl0slgygLwheTIO7bemjLBHh34wmNvvKw';
 let cloud=null;            /* {fid, code} */
 let pushQueue=[];          /* [{store,id,data,updated_at,deleted}] */
