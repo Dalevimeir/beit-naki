@@ -956,6 +956,19 @@ nav button.on{background:rgba(108,77,246,.14);font-weight:800}
   </div>
 </div>
 
+<div class="modal-bg" id="m-ask">
+  <div class="modal">
+    <button class="modal-close" onclick="askResolve(null)">✕</button>
+    <h2 id="askTitle"></h2>
+    <div class="sub" id="askSub" style="display:none"></div>
+    <input type="text" id="askInput" style="text-align:center;font-size:1.2rem;letter-spacing:2px">
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn ghost" style="flex:1" id="askCancel" onclick="askResolve(null)">ביטול</button>
+      <button class="btn green" style="flex:1" id="askOk" onclick="askSubmit()">אישור</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="m-terms">
   <div class="modal">
     <h2>📋 תנאי שימוש</h2>
@@ -1022,7 +1035,7 @@ const setMeta=(k,v)=>put('meta',{k,v});
 
 /* ================= Cloud sync (Supabase) ================= */
 const SB_URL='https://owowbxvotueqgkbfjwqg.supabase.co';
-const APP_VERSION='v118';
+const APP_VERSION='v119';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93b3dieHZvdHVlcWdrYmZqd3FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjc4MzYsImV4cCI6MjA5Njg0MzgzNn0.Mb7hJ7xhGIUl0slgygLwheTIO7bemjLBHh34wmNvvKw';
 let cloud=null;            /* {fid, code} */
 let pushQueue=[];          /* [{store,id,data,updated_at,deleted}] */
@@ -1354,7 +1367,7 @@ function t(k){const d=STR[LANG]||STR.he;return (d&&d[k]!=null)?d[k]:(STR.he[k]!=
 Object.assign(STR.he,{
   hi_parents:'שלום להורים! 👋', hi_child:'שלום', mydevice_yours:'המכשיר הזה שלך 🎮',
   voice_enabled:'מחמאות קוליות הופעלו 🔊', voice_disabled:'מחמאות קוליות כובו 🔇',
-  pin_title:'קוד הורים 🔐', pin_sub:'הקלידו את הקוד בן 4 הספרות', pin_wrong:'קוד שגוי 🙈',
+  pin_title:'קוד הורים 🔐', pin_sub:'הקלידו את הקוד בן 4 הספרות', pin_wrong:'קוד שגוי 🙈', ask_ok:'אישור', ask_cancel:'ביטול',
   pin_new_title:'קוד הורים חדש 🔐', pin_new_sub:'הקלידו קוד חדש בן 4 ספרות', pin_updated:'קוד ההורים עודכן בהצלחה 🔐',
   join_prompt:'הקלידו את קוד המשפחה לחיבור (6 תווים):', code_6:'הקוד הוא 6 תווים 🔢',
   already_connected:'המכשיר כבר מחובר למשפחה הזו ✓', join_confirm:'להתחבר ולסנכרן עם המשפחה הזו?\nהלוח הנוכחי במכשיר זה יוחלף בלוח המשותף שיימשך מהענן.',
@@ -1385,7 +1398,7 @@ Object.assign(STR.he,{
 Object.assign(STR.en,{
   hi_parents:'Hello parents! 👋', hi_child:'Hi', mydevice_yours:'this device is yours 🎮',
   voice_enabled:'Spoken praise on 🔊', voice_disabled:'Spoken praise off 🔇',
-  pin_title:'Parent PIN 🔐', pin_sub:'Enter your 4-digit PIN', pin_wrong:'Wrong PIN 🙈',
+  pin_title:'Parent PIN 🔐', pin_sub:'Enter your 4-digit PIN', pin_wrong:'Wrong PIN 🙈', ask_ok:'OK', ask_cancel:'Cancel',
   pin_new_title:'New parent PIN 🔐', pin_new_sub:'Enter a new 4-digit PIN', pin_updated:'Parent PIN updated 🔐',
   join_prompt:'Enter the family code to connect (6 characters):', code_6:'The code is 6 characters 🔢',
   already_connected:'This device is already in this family ✓', join_confirm:'Connect and sync with this family?\nThe current board on this device will be replaced by the shared board from the cloud.',
@@ -1677,6 +1690,31 @@ function buildPad(){
   pad.innerHTML=[1,2,3,4,5,6,7,8,9,'✕',0,'⌫'].map(k=>
     `<button onclick="pinKey('${k}')">${k}</button>`).join('');
 }
+/* ===== In-app text prompt (replaces window.prompt, which is unreliable in installed PWAs) ===== */
+let _askResolve=null;
+function askText(opts){
+  opts=opts||{};
+  return new Promise(res=>{
+    _askResolve=res;
+    document.getElementById('askTitle').textContent=opts.title||'';
+    const sub=document.getElementById('askSub');
+    if(opts.sub){sub.textContent=opts.sub;sub.style.display=''}else{sub.style.display='none'}
+    const inp=document.getElementById('askInput');
+    inp.value=opts.value||'';
+    inp.type=(opts.inputmode==='numeric')?'tel':'text';
+    inp.setAttribute('inputmode',opts.inputmode||'text');
+    if(opts.maxlength)inp.setAttribute('maxlength',opts.maxlength);else inp.removeAttribute('maxlength');
+    inp.setAttribute('placeholder',opts.placeholder||'');
+    inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();askSubmit()}};
+    document.getElementById('askOk').textContent=opts.ok||t('ask_ok');
+    document.getElementById('askCancel').textContent=t('ask_cancel');
+    openModal('m-ask');
+    setTimeout(()=>{try{inp.focus()}catch(e){}},60);
+  });
+}
+function askSubmit(){_finishAsk(document.getElementById('askInput').value)}
+function askResolve(v){_finishAsk(v)}
+function _finishAsk(v){const r=_askResolve;_askResolve=null;closeModal('m-ask');if(r)r(v);}
 function askPin(cb){
   pinBuf='';pinCb=cb;pinSetupMode=false;
   document.getElementById('pinTitle').textContent=t('pin_title');
@@ -2927,7 +2965,7 @@ function libSuggest(){
   }, true);
 }
 async function openModPanel(){
-  if(!libAdminKey){ let k=null; try{k=prompt(LANG==='en'?'Approval PIN (4 digits):':'קוד אישור (4 ספרות):');}catch(e){} if(!k)return; libAdminKey=k; }
+  if(!libAdminKey){ const k=await askText({title:LANG==='en'?'Approval PIN (4 digits)':'קוד אישור (4 ספרות)',inputmode:'numeric',maxlength:4}); if(!k)return; libAdminKey=k; }
   openModal('m-mod'); await renderModPending();
 }
 async function renderModPending(){
@@ -2948,8 +2986,9 @@ async function modDecide(id,status){
   }catch(e){ toast(LANG==='en'?'Failed':'נכשל'); }
 }
 async function modChangeKey(){
-  let oldk=libAdminKey; if(!oldk){try{oldk=prompt(LANG==='en'?'Current key:':'מפתח נוכחי:');}catch(e){}} if(!oldk)return;
-  let nk=null; try{nk=prompt(LANG==='en'?'New key (min 6 chars):':'מפתח חדש (6 תווים לפחות):');}catch(e){} if(!nk)return;
+  let oldk=libAdminKey; if(!oldk){ oldk=await askText({title:LANG==='en'?'Current key':'מפתח נוכחי'}); } if(!oldk)return;
+  const nk=await askText({title:LANG==='en'?'New key':'מפתח חדש',sub:LANG==='en'?'At least 6 characters':'לפחות 6 תווים'}); if(!nk)return;
+  if(nk.length<6){ toast(LANG==='en'?'Key must be at least 6 characters':'המפתח חייב להיות לפחות 6 תווים'); return; }
   try{ await rpc('bnlib_setkey',{p_old:oldk,p_new:nk}); libAdminKey=nk; toast(LANG==='en'?'Key changed ✓':'המפתח שונה ✓'); }
   catch(e){ toast(LANG==='en'?'Failed (wrong key?)':'נכשל (מפתח שגוי?)'); }
 }
